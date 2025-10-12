@@ -186,13 +186,6 @@ async function getAllDocuments() {
 /* proces all documnts and return structured data */
 export async function loadKnowledgeBase() {
   // chek cache first
-}
-
-/**
- * Process all documents and return structured data
- */
-export async function loadKnowledgeBase() {
-  // Check cache first
   const cached = getCachedDocuments();
   if (cached) {
     return cached;

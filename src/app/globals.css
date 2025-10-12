@@ -1,0 +1,282 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 160 84% 4.9%;
+ 
+    --card: 0 0% 100%;
+    --card-foreground: 160 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 84% 4.9%;
+ 
+    /* Emerald color palette as HSL values */
+    --primary: 160 84% 39%; /* Emerald-500 */
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 160 59% 94%; /* Emerald-50 */
+    --secondary-foreground: 160 84% 25%; /* Emerald-700 */
+ 
+    --muted: 160 59% 94%; /* Emerald-50 */
+    --muted-foreground: 160 10% 40%;
+ 
+    --accent: 160 59% 94%; /* Emerald-50 */
+    --accent-foreground: 160 84% 25%; /* Emerald-700 */
+ 
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    --border: 160 5% 90%; /* Light border with emerald tint */
+    --input: 160 5% 90%; /* Light input with emerald tint */
+    --ring: 160 84% 39%; /* Emerald-500 */
+ 
+    --radius: 0.75rem;
+  }
+ 
+  .dark {
+    --background: 160 30% 5%;
+    --foreground: 0 0% 95%;
+ 
+    --card: 160 30% 7%;
+    --card-foreground: 0 0% 95%;
+ 
+    --popover: 160 30% 7%;
+    --popover-foreground: 0 0% 95%;
+ 
+    --primary: 160 84% 39%; /* Emerald-500 */
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 160 40% 15%; /* Dark emerald */
+    --secondary-foreground: 0 0% 98%;
+ 
+    --muted: 160 40% 15%; /* Dark emerald */
+    --muted-foreground: 160 10% 70%;
+ 
+    --accent: 160 40% 15%; /* Dark emerald */
+    --accent-foreground: 0 0% 98%;
+ 
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    --border: 160 30% 15%;
+    --input: 160 30% 15%;
+    --ring: 160 84% 39%; /* Emerald-500 */
+  }
+  
+  html {
+    height: 100%;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: white;
+    height: 100%;
+  }
+}
+ 
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  
+  body {
+    height: 100%;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.5);
+  }
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.glass-dark {
+  background: rgba(2, 44, 34, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    #ecfdf5 4%,
+    #d1fae5 25%,
+    #ecfdf5 36%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Smooth animations for messages and UI elements */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-top {
+  from {
+    transform: translateY(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    transform: translateX(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-top-2 {
+  from {
+    transform: translateY(-0.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Utility classes */
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom-4 {
+  animation-name: slide-in-from-bottom;
+}
+
+.slide-in-from-top-4 {
+  animation-name: slide-in-from-top;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top-2;
+}
+
+.slide-in-from-left-4 {
+  animation-name: slide-in-from-left;
+}
+
+.zoom-in {
+  animation-name: zoom-in;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}
+
+.duration-500 {
+  animation-duration: 500ms;
+}
+
+.duration-700 {
+  animation-duration: 700ms;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}

@@ -276,8 +276,11 @@ async function tryTier3(userMessage, conversationHistory = []) {
 // MAIN CHAT ENDPOINT - 3-TIER DECISION LOGIC
 // ============================================================================
 export async function POST(request) {
-  console.log('\n' + '='.repeat(80));
-  console.log('📨 NEW QUERY RECEIVED');
+  const timestamp = new Date().toISOString();
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('� USER QUERY LOG - MULTI-TIER CHAT ENDPOINT');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🕐 Timestamp:', timestamp);
   console.log('='.repeat(80));
 
   try {
@@ -327,6 +330,7 @@ export async function POST(request) {
     }
 
     console.log(`📝 User Message: "${message}"`);
+    console.log(`📊 Message Length: ${message.length} characters`);
     
     // Log conversation history length
     if (conversationHistory && conversationHistory.length > 0) {
@@ -343,7 +347,8 @@ export async function POST(request) {
     
     if (tier1Result.success) {
       console.log('\n✅ FINAL ANSWER: Tier 1 (Internal Documents)');
-      console.log('='.repeat(80) + '\n');
+      console.log('📊 Response Length:', tier1Result.response.length, 'characters');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       
       return NextResponse.json({
         message: tier1Result.response,
@@ -358,7 +363,8 @@ export async function POST(request) {
     
     if (tier2Result.success) {
       console.log('\n✅ FINAL ANSWER: Tier 2 (AI Knowledge)');
-      console.log('='.repeat(80) + '\n');
+      console.log('📊 Response Length:', tier2Result.response.length, 'characters');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       
       return NextResponse.json({
         message: tier2Result.response,
@@ -373,7 +379,9 @@ export async function POST(request) {
     
     if (tier3Result.success) {
       console.log('\n✅ FINAL ANSWER: Tier 3 (Google Search)');
-      console.log('='.repeat(80) + '\n');
+      console.log('📊 Response Length:', tier3Result.response.length, 'characters');
+      console.log('🔗 Sources:', tier3Result.metadata.sources?.length || 0);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       
       return NextResponse.json({
         message: tier3Result.response,
@@ -385,7 +393,7 @@ export async function POST(request) {
     // ALL TIERS FAILED
     // ========================================================================
     console.log('\n❌ ALL TIERS FAILED');
-    console.log('='.repeat(80) + '\n');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     
     return NextResponse.json({
       message: "I apologize, but I'm having trouble finding an answer to your question. Please try rephrasing or contact support.",
@@ -400,8 +408,13 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('\n❌ CRITICAL ERROR:', error);
-    console.log('='.repeat(80) + '\n');
+    console.error('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ CRITICAL ERROR LOG');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('🕐 Timestamp:', new Date().toISOString());
+    console.error('❌ Error Message:', error.message);
+    console.error('📋 Error Stack:', error.stack);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     
     // ========================================================================
     // PROTECTION 3: Enhanced Error Handling

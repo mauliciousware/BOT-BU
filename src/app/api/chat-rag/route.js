@@ -37,6 +37,7 @@ async function retryWithBackoff(fn, maxRetries = 3) {
 
 export async function POST(req) {
   const startTime = Date.now();
+  const timestamp = new Date().toISOString();
   
   try {
     const { message, conversationHistory = [] } = await req.json();
@@ -48,11 +49,20 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
+    // Enhanced logging for Vercel production logs
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 USER QUERY LOG - RAG ENDPOINT');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🕐 Timestamp:', timestamp);
+    console.log('💬 User Query:', message);
+    console.log('📝 Conversation History:', conversationHistory.length, 'messages');
+    
     // Check cache first
     const cacheKey = getCacheKey(message);
     const cached = cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       console.log('📦 Cache hit:', message);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       return NextResponse.json({
         message: cached.data.response,
         metadata: {
@@ -310,6 +320,13 @@ Be helpful and accurate.`;
     });
 
     console.log(`✅ Response generated in ${responseData.metadata.processingTime}ms${usedFallback ? ' (fallback)' : ''}`);
+    console.log('📊 Results:', {
+      chunksFound: responseData.metadata.chunksFound,
+      searchMethod: responseData.metadata.searchMethod,
+      cached: responseData.metadata.cached,
+      responseLength: response.length
+    });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     
     return NextResponse.json({
       message: response,
@@ -317,7 +334,14 @@ Be helpful and accurate.`;
     });
 
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ ERROR LOG - RAG ENDPOINT');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('🕐 Timestamp:', new Date().toISOString());
+    console.error('⚠️ Error:', error.message);
+    console.error('📋 Stack:', error.stack);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    
     return NextResponse.json({
       message: "Sorry, I encountered an error processing your request.",
       metadata: {

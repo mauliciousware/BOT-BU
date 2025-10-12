@@ -1,0 +1,272 @@
+{
+  "week": "10/06/2025 - 10/12/2025",
+  "locations": [
+    {
+      "name": "Tully's University",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "12:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Hinman Dining Hall",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 08:00 PM",
+        "saturday_to_sunday": "11:00 AM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Decker College of Nursing and Health Sciences Café",
+      "regular_hours": {
+        "monday_to_thursday": "08:00 AM - 02:30 PM",
+        "friday": "08:00 AM - 02:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Starbucks Mobile Truck",
+      "regular_hours": {
+        "monday": "Closed",
+        "tuesday": "11:00 AM - 02:30 PM",
+        "wednesday_to_thursday": "Closed",
+        "friday": "11:00 AM - 02:30 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Downtown Mini Mart",
+      "regular_hours": {
+        "monday_to_sunday": "All Day"
+      }
+    },
+    {
+      "name": "Hissho Sushi",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday": "12:00 PM - 08:00 PM",
+        "sunday": "Closed"
+      }
+    },
+    {
+      "name": "Garbanzo",
+      "regular_hours": {
+        "monday_to_friday": "11:30 AM - 08:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Yes Chef Food Truck",
+      "special_hours": {
+        "10/02/2025 - 10/31/2025": {
+          "monday_to_sunday": "Closed"
+        }
+      },
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 04:00 PM"
+      }
+    },
+    {
+      "name": "C4 Nite Owl",
+      "regular_hours": {
+        "monday_to_sunday": "09:00 PM - 12:00 AM"
+      }
+    },
+    {
+      "name": "Library Tower Café",
+      "regular_hours": {
+        "monday_to_thursday": "08:00 AM - 07:00 PM",
+        "friday": "08:00 AM - 05:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Kosher Korner",
+      "special_hours": {
+        "10/07/2025 - 10/15/2025": {
+          "tuesday_to_wednesday": ["12:30 PM - 02:00 PM", "05:00 PM - 08:00 PM"]
+        }
+      },
+      "regular_hours": {
+        "monday_to_thursday": {
+          "lunch": "11:00 AM - 01:30 PM",
+          "dinner": "05:00 PM - 08:00 PM"
+        },
+        "friday": {
+          "lunch": "11:00 AM - 01:30 PM"
+        },
+        "saturday": "Closed",
+        "sunday": {
+          "brunch": "11:00 AM - 01:30 PM",
+          "dinner": "05:00 PM - 08:00 PM"
+        }
+      }
+    },
+    {
+      "name": "The John Arthur Café Presents: Einstein Bros. Bagels",
+      "regular_hours": {
+        "monday_to_thursday": "07:00 AM - 05:00 PM",
+        "friday": "07:00 AM - 04:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Mein Bowl",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "12:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Hinman C-Store",
+      "regular_hours": {
+        "monday_to_sunday": "11:00 AM - 10:00 PM"
+      }
+    },
+    {
+      "name": "Global Taco Food Truck",
+      "special_hours": {
+        "10/22/2025 - 10/24/2025": {
+          "wednesday_to_thursday": "08:15 PM - 12:00 AM (Digman bus stop)",
+          "friday": "Closed"
+        }
+      },
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 04:00 PM"
+      }
+    },
+    {
+      "name": "Quesera",
+      "regular_hours": {
+        "monday_to_thursday": "11:00 AM - 07:00 PM",
+        "friday": "11:00 AM - 06:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "ITC Cafe",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 03:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "2nd Heaven",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "02:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Pharmacy School Mini Mart",
+      "regular_hours": {
+        "monday_to_sunday": "All Day"
+      }
+    },
+    {
+      "name": "Subway",
+      "special_hours": {
+        "10/01/2025 - 10/29/2025": {
+          "wednesday_to_thursday": "11:00 AM - 07:00 PM"
+        }
+      },
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "12:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Chick-N-Bap",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "02:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Dunkin'",
+      "regular_hours": {
+        "monday_to_friday": "07:00 AM - 08:00 PM",
+        "saturday_to_sunday": "10:00 AM - 06:00 PM"
+      }
+    },
+    {
+      "name": "Appalachian Nite Owl",
+      "regular_hours": {
+        "monday_to_sunday": "09:00 PM - 01:00 AM"
+      }
+    },
+    {
+      "name": "Breakfast & Beyond",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 02:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Starbucks",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 08:00 PM",
+        "saturday_to_sunday": "11:00 AM - 08:00 PM"
+      }
+    },
+    {
+      "name": "NY Street Deli",
+      "regular_hours": {
+        "monday_to_thursday": "11:00 AM - 06:00 PM",
+        "friday": "11:00 AM - 05:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "Shake Smart",
+      "regular_hours": {
+        "monday_to_thursday": "10:00 AM - 07:00 PM",
+        "friday": "10:00 AM - 06:00 PM",
+        "saturday_to_sunday": "12:00 PM - 06:00 PM"
+      }
+    },
+    {
+      "name": "The Hungry Bearcat",
+      "regular_hours": {
+        "monday_to_friday": "07:30 AM - 03:00 PM",
+        "saturday_to_sunday": "Closed"
+      }
+    },
+    {
+      "name": "CopperTop Pizzeria",
+      "regular_hours": {
+        "monday_to_friday": "11:00 AM - 08:00 PM",
+        "saturday_to_sunday": "12:00 PM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Appalachian Dining Hall",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 08:00 PM",
+        "saturday_to_sunday": "11:00 AM - 08:00 PM"
+      }
+    },
+    {
+      "name": "Royal Indian",
+      "regular_hours": {
+        "monday_to_thursday": "11:00 AM - 08:00 PM",
+        "friday": "11:00 AM - 07:00 PM",
+        "saturday_to_sunday": "12:00 PM - 07:00 PM"
+      }
+    },
+    {
+      "name": "C4 Dining Hall",
+      "regular_hours": {
+        "monday_to_friday": "08:00 AM - 08:00 PM",
+        "saturday_to_sunday": "09:00 AM - 08:00 PM"
+      }
+    },
+    {
+      "name": "CIW Dining Hall",
+      "regular_hours": {
+        "monday_to_thursday": "07:00 AM - 08:30 PM",
+        "friday": "07:00 AM - 01:30 PM",
+        "saturday_to_sunday": "11:00 AM - 01:30 PM"
+      }
+    }
+  ]
+}

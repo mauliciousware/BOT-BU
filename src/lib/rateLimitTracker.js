@@ -1,33 +1,31 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
-// ============================================================================
-// GLOBAL RATE LIMIT TRACKER - VERCEL-COMPATIBLE VERSION
-// ============================================================================
-// This tracks API usage GLOBALLY for ALL users of Bot Bu
-// Uses /tmp directory on Vercel (writable), falls back to in-memory if fails
+// ********** global rate limit tracker - vercel compatible **********
+// this tracks api usage GLOBALLY for all users of bot bu
+// uses /tmp directory on vercel (writable) falls back to in memory if fails
 
-// Detect if running on Vercel
+// detct if running on vercel
 const isVercel = process.env.VERCEL === '1';
 
-// File path for persistent storage
+// file path for persistnt storage
 const DATA_DIR = isVercel ? '/tmp/.usage-data' : join(process.cwd(), '.usage-data');
 const STATE_FILE = join(DATA_DIR, 'usage-state.json');
 
-// In-memory fallback if file system fails
+// in memory fallbak if file system fails
 let inMemoryState = null;
 
-// Ensure data directory exists
+// ensure data directry exists
 try {
   if (!existsSync(DATA_DIR)) {
     mkdirSync(DATA_DIR, { recursive: true });
   }
 } catch (error) {
-  console.log('⚠️  Cannot create data directory, using in-memory storage:', error.message);
+  console.log('Cannot create data directory using in-memory storage:', error.message);
   inMemoryState = createDefaultState();
 }
 
-// Create default state
+// crete default state
 function createDefaultState() {
   return {
     requestsToday: 0,
@@ -36,14 +34,14 @@ function createDefaultState() {
     currentMinute: Math.floor(Date.now() / 60000),
     lastRequestTime: 0,
     requestTimestamps: [],
-    totalRequests: 0, // Lifetime total
-    firstRequestDate: new Date().toISOString() // When tracking started
+    totalRequests: 0, // lifetme total
+    firstRequestDate: new Date().toISOString() // when trackin started
   };
 }
 
-// Load state from file or create new
+// load state from file or crete new
 function loadState() {
-  // If using in-memory fallback
+  // if using in memory fallbak
   if (inMemoryState !== null) {
     return inMemoryState;
   }
@@ -52,22 +50,22 @@ function loadState() {
     if (existsSync(STATE_FILE)) {
       const data = readFileSync(STATE_FILE, 'utf-8');
       const loadedState = JSON.parse(data);
-      console.log('📊 Loaded persistent usage data:', loadedState);
+      console.log('Loaded persistent usage data:', loadedState);
       return loadedState;
     }
   } catch (error) {
-    console.error('⚠️  Error loading usage state, using in-memory:', error.message);
+    console.error('Error loading usage state using in-memory:', error.message);
     inMemoryState = createDefaultState();
     return inMemoryState;
   }
   
-  // Default state
+  // defalt state
   return createDefaultState();
 }
 
-// Save state to file
+// save state to fil
 function saveState(state) {
-  // If using in-memory fallback, just update it
+  // if using in memory fallbak just update it
   if (inMemoryState !== null) {
     inMemoryState = { ...state };
     return;
@@ -76,50 +74,48 @@ function saveState(state) {
   try {
     writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf-8');
   } catch (error) {
-    console.error('⚠️  Error saving usage state, switching to in-memory:', error.message);
+    console.error('Error saving usage state switching to in-memory:', error.message);
     inMemoryState = { ...state };
   }
 }
 
-// In-memory state (loaded from file)
+// in memory state (loaded from fil)
 let state = loadState();
 
-// Rate limits from Gemini API
+// rate limits from gemini api
 const LIMITS = {
-  RPM: 1000,  // Requests per minute (shared across all users)
-  RPD: 10000, // Requests per day (shared across all users)
-  MIN_REQUEST_INTERVAL: 1000 // 1 second minimum between requests
+  RPM: 1000,  // requests per minute (shared across all usrs)
+  RPD: 10000, // requests per day (shared across all usrs)
+  MIN_REQUEST_INTERVAL: 1000 // 1 second min between requests
 };
 
-// ============================================================================
-// Check if a request can be made (RPM and RPD limits)
-// ============================================================================
+// ********** check if a request can be made (rpm and rpd limits) **********
 export function canMakeRequest() {
   const now = Date.now();
   const currentMinute = Math.floor(now / 60000);
   const today = new Date().toDateString();
 
-  // Reset daily counter if it's a new day
+  // reset daily counter if its a new day
   if (state.currentDay !== today) {
     state.requestsToday = 0;
     state.currentDay = today;
-    saveState(state); // Persist the reset
+    saveState(state); // persist the rset
   }
 
-  // Reset minute counter if it's a new minute
+  // reset minute counter if its new minute
   if (state.currentMinute !== currentMinute) {
     state.requestsThisMinute = 0;
     state.currentMinute = currentMinute;
     state.requestTimestamps = [];
-    saveState(state); // Persist the reset
+    saveState(state); // persist the rset
   }
 
-  // Clean up old timestamps (older than 1 minute)
+  // clean up old timestamps (older than 1 minut)
   const oneMinuteAgo = now - 60000;
   state.requestTimestamps = state.requestTimestamps.filter(ts => ts > oneMinuteAgo);
   state.requestsThisMinute = state.requestTimestamps.length;
 
-  // Check daily limit
+  // chek daily limit
   if (state.requestsToday >= LIMITS.RPD) {
     return {
       allowed: false,
@@ -129,7 +125,7 @@ export function canMakeRequest() {
     };
   }
 
-  // Check minute limit
+  // chek minute limit
   if (state.requestsThisMinute >= LIMITS.RPM) {
     const secondsUntilNextMinute = 60 - (Math.floor((now % 60000) / 1000));
     return {
@@ -149,27 +145,23 @@ export function canMakeRequest() {
   };
 }
 
-// ============================================================================
-// Record a request (call this after making an API call)
-// ============================================================================
+// ********** record a request (call after making api call) **********
 export function recordRequest(tokens = 0) {
   const now = Date.now();
   
   state.requestsToday++;
   state.requestsThisMinute++;
-  state.totalRequests++; // Increment lifetime total
+  state.totalRequests++; // incremen lifetime total
   state.lastRequestTime = now;
   state.requestTimestamps.push(now);
 
-  // Persist to file after each request
+  // persist to file after each requiest
   saveState(state);
 
-  console.log(`📊 Global Usage: ${state.requestsToday}/${LIMITS.RPD} today, ${state.requestsThisMinute}/${LIMITS.RPM} this minute (${state.totalRequests} total)`);
+  console.log(`Global Usage: ${state.requestsToday}/${LIMITS.RPD} today, ${state.requestsThisMinute}/${LIMITS.RPM} this minute (${state.totalRequests} total)`);
 }
 
-// ============================================================================
-// Check if requests are being made too quickly (throttling)
-// ============================================================================
+// ********** check if requests are being made to quickly (throttling) **********
 export function shouldThrottle() {
   const now = Date.now();
   const timeSinceLastRequest = now - state.lastRequestTime;
@@ -188,15 +180,13 @@ export function shouldThrottle() {
   };
 }
 
-// ============================================================================
-// Get current usage statistics (for UI display)
-// ============================================================================
+// ********** get current usage statistcs (for ui display) **********
 export function getUsageStats() {
   const now = Date.now();
   const currentMinute = Math.floor(now / 60000);
   const today = new Date().toDateString();
 
-  // Clean up if needed
+  // clean up if neede
   if (state.currentDay !== today) {
     state.requestsToday = 0;
     state.currentDay = today;
@@ -208,7 +198,7 @@ export function getUsageStats() {
     state.requestTimestamps = [];
   }
 
-  // Clean up old timestamps
+  // clean up old timestams
   const oneMinuteAgo = now - 60000;
   state.requestTimestamps = state.requestTimestamps.filter(ts => ts > oneMinuteAgo);
   state.requestsThisMinute = state.requestTimestamps.length;
@@ -216,8 +206,8 @@ export function getUsageStats() {
   return {
     requestsToday: state.requestsToday,
     requestsThisMinute: state.requestsThisMinute,
-    totalRequests: state.totalRequests, // Lifetime total
-    firstRequestDate: state.firstRequestDate, // When tracking started
+    totalRequests: state.totalRequests, // lifetme total
+    firstRequestDate: state.firstRequestDate, // when trackin started
     limits: {
       daily: LIMITS.RPD,
       minute: LIMITS.RPM
@@ -234,7 +224,7 @@ export function getUsageStats() {
   };
 }
 
-// Helper function to get usage status
+// helper funtion to get usage status
 function getUsageStatus() {
   const dailyPercent = (state.requestsToday / LIMITS.RPD) * 100;
   

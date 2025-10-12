@@ -4,13 +4,11 @@ import path from "path";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
-// Load knowledge base from file system
+// load knowledge base from file sytem
 const knowledgeBasePath = path.join(process.cwd(), "knowledge-base", "unified-knowledge-embedded.json");
 const knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, "utf-8"));
 
-/**
- * Generate embedding for a query
- */
+/* genrate embedding for a querry */
 export async function generateQueryEmbedding(query) {
   try {
     const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
@@ -22,9 +20,7 @@ export async function generateQueryEmbedding(query) {
   }
 }
 
-/**
- * Calculate cosine similarity between two vectors
- */
+/* calculate cosine similarity between two vectrs */
 function cosineSimilarity(vecA, vecB) {
   if (!vecA || !vecB || vecA.length !== vecB.length) return 0;
   
@@ -35,9 +31,7 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (magnitudeA * magnitudeB);
 }
 
-/**
- * Find most relevant chunks for a query using vector similarity
- */
+/* find most relevent chunks for query using vector similrity */
 export async function findRelevantChunks(query, options = {}) {
   const {
     topK = 5,
@@ -46,12 +40,12 @@ export async function findRelevantChunks(query, options = {}) {
   } = options;
   
   try {
-    // Generate query embedding
+    // genrate query embedding
     const queryEmbedding = await generateQueryEmbedding(query);
     
-    // Calculate similarity for all chunks
+    // calulate similarity for all chunks
     let chunks = knowledgeBase.chunks
-      .filter(chunk => chunk.embedding) // Only chunks with embeddings
+      .filter(chunk => chunk.embedding) // only chunks with embedings
       .filter(chunk => !category || chunk.category === category)
       .map(chunk => ({
         ...chunk,
@@ -59,10 +53,10 @@ export async function findRelevantChunks(query, options = {}) {
       }))
       .filter(chunk => chunk.similarity >= minScore);
     
-    // Sort by similarity (highest first)
+    // sort by similarity (higest first)
     chunks.sort((a, b) => b.similarity - a.similarity);
     
-    // Return top K results
+    // return top k results
     return chunks.slice(0, topK);
     
   } catch (error) {
@@ -71,9 +65,7 @@ export async function findRelevantChunks(query, options = {}) {
   }
 }
 
-/**
- * Keyword-based fallback search (if vector search fails)
- */
+/* keyword based fallbak search (if vector serch fails) */
 export function keywordSearch(query, topK = 5) {
   const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   
@@ -103,9 +95,7 @@ export function keywordSearch(query, topK = 5) {
   return chunks.slice(0, topK);
 }
 
-/**
- * Get knowledge base statistics
- */
+/* get knowledge base statistcs */
 export function getKnowledgeStats() {
   return {
     totalChunks: knowledgeBase.total_chunks,

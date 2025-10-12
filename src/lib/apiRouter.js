@@ -1,39 +1,35 @@
-/**
- * Smart API Router - Chooses best API based on context
- */
+/* smart API router - chooses best API based on contxt */
 
 const RAG_API = '/api/chat-rag';
 const FALLBACK_API = '/api/chat';
 
-// Track RAG API failures
+// trak rag api failures
 let ragFailures = 0;
 let lastRagFailure = null;
 const MAX_FAILURES = 3;
-const COOLDOWN_PERIOD = 60000; // 1 minute
+const COOLDOWN_PERIOD = 60000; // 1 minut
 
-/**
- * Call API with automatic fallback
- */
+/* call api with automatic fallbak */
 export async function callChatAPI(message, conversationHistory = [], signal = null) {
   const startTime = Date.now();
   
-  // Check if RAG is in cooldown due to repeated failures
+  // chek if rag is in cooldown due to repeated failres
   const now = Date.now();
   const inCooldown = ragFailures >= MAX_FAILURES && 
                      lastRagFailure && 
                      (now - lastRagFailure) < COOLDOWN_PERIOD;
   
   if (inCooldown) {
-    console.log('⏸️ RAG in cooldown, using fallback API');
+    console.log('RAG in cooldown using fallback API');
     return await fetchAPI(FALLBACK_API, message, conversationHistory, signal);
   }
   
-  // Try RAG first
+  // try rag first
   try {
-    console.log('🚀 Using RAG API...');
+    console.log('Using RAG API...');
     const response = await fetchAPI(RAG_API, message, conversationHistory, signal);
     
-    // Success! Reset failure counter
+    // sucess! reset failure counter
     ragFailures = 0;
     lastRagFailure = null;
     
@@ -44,15 +40,15 @@ export async function callChatAPI(message, conversationHistory = [], signal = nu
     };
     
   } catch (ragError) {
-    console.warn('⚠️ RAG API failed:', ragError.message);
+    console.warn('RAG API faild:', ragError.message);
     
-    // Track failure
+    // trak failure
     ragFailures++;
     lastRagFailure = Date.now();
     
-    // Try fallback
+    // try fallbak
     try {
-      console.log('🔄 Falling back to standard API...');
+      console.log('Falling back to standard API...');
       const response = await fetchAPI(FALLBACK_API, message, conversationHistory, signal);
       
       return {
@@ -63,15 +59,13 @@ export async function callChatAPI(message, conversationHistory = [], signal = nu
       };
       
     } catch (fallbackError) {
-      console.error('❌ Both APIs failed!');
+      console.error('Both APIs faildd!');
       throw fallbackError;
     }
   }
 }
 
-/**
- * Fetch from specific API
- */
+/* fetch from specfic api */
 async function fetchAPI(endpoint, message, conversationHistory, signal) {
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -91,18 +85,14 @@ async function fetchAPI(endpoint, message, conversationHistory, signal) {
   return await response.json();
 }
 
-/**
- * Reset failure tracking (useful for manual retry)
- */
+/* reset failre tracking (useful for manual retry) */
 export function resetAPIFailures() {
   ragFailures = 0;
   lastRagFailure = null;
-  console.log('🔄 API failure tracking reset');
+  console.log('API failure tracking reset');
 }
 
-/**
- * Get current API status
- */
+/* get current api staus */
 export function getAPIStatus() {
   const now = Date.now();
   const inCooldown = ragFailures >= MAX_FAILURES && 

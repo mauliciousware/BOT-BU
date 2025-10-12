@@ -4,7 +4,7 @@ import { findRelevantChunks, keywordSearch } from "@/lib/vectorStore";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
-// Simple in-memory cache
+// simple cache in memory
 const cache = new Map();
 const CACHE_TTL = 7200000;
 
@@ -12,7 +12,7 @@ function getCacheKey(message) {
   return message.toLowerCase().trim();
 }
 
-// Retry helper with exponential backoff
+// retry logic with exponential backof
 async function retryWithBackoff(fn, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -27,9 +27,9 @@ async function retryWithBackoff(fn, maxRetries = 3) {
         throw error;
       }
       
-      // Exponential backoff: 1s, 2s, 4s
+      // exponential backof: 1s 2s 4s etc
       const delay = Math.pow(2, i) * 1000;
-      console.log(`⏳ Retry ${i + 1}/${maxRetries} after ${delay}ms...`);
+      console.log(`Retry ${i + 1}/${maxRetries} after ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -49,20 +49,20 @@ export async function POST(req) {
       }, { status: 400 });
     }
 
-    // Enhanced logging for Vercel production logs
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📊 USER QUERY LOG - RAG ENDPOINT');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🕐 Timestamp:', timestamp);
-    console.log('💬 User Query:', message);
-    console.log('📝 Conversation History:', conversationHistory.length, 'messages');
+    // logging for vercel production
+    console.log('=================================================================');
+    console.log('USER QUERY LOG - RAG ENDPOINT');
+    console.log('=================================================================');
+    console.log('Timestamp:', timestamp);
+    console.log('User Query:', message);
+    console.log('Conversation History:', conversationHistory.length, 'messages');
     
-    // Check cache first
+    // chek cache first
     const cacheKey = getCacheKey(message);
     const cached = cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      console.log('📦 Cache hit:', message);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('Cache hit:', message);
+      console.log('=================================================================\n');
       return NextResponse.json({
         message: cached.data.response,
         metadata: {
@@ -73,9 +73,9 @@ export async function POST(req) {
       });
     }
 
-    console.log('\n🔍 Processing query:', message);
+    console.log('\nProcessing query:', message);
 
-    // Step 1: Detect if this is a dining-related query and add current time context
+    // step 1: detect dining query and add curent time context
     const diningKeywords = ['dining', 'eat', 'food', 'restaurant', 'cafe', 'cafeteria', 'meal', 'lunch', 'dinner', 'breakfast', 'open', 'hours', 'starbucks', 'tully', 'hinman', 'sushi', 'mart'];
     const isDiningQuery = diningKeywords.some(keyword => 
       message.toLowerCase().includes(keyword)
@@ -98,16 +98,16 @@ export async function POST(req) {
       });
       
       timeContext = `\n\nCURRENT DATE & TIME:\nDate: ${dateString}\nDay: ${dayName}\nTime: ${timeString}`;
-      console.log('🍽️ Dining query detected, adding time context:', timeContext);
+      console.log('Dining query detectd, adding time context:', timeContext);
     }
 
-    // Step 2: Expand query with conversation context for better search
+    // step 2: expand qurey with conversation context
     let searchQuery = message;
     
-    // ALWAYS extract course numbers from current message
+    // alwyas extract course numbers from curent msg
     const currentCourses = message.match(/CS\s*(\d{3}[A-Z]?)/gi) || [];
     
-    // Check what type of contextual reference this is
+    // chek what type of refference this is
     const singularWords = ['that', 'it', 'this']; // Refers to ONE thing
     const pluralWords = ['all', 'others', 'them', 'these', 'those']; // Refers to MULTIPLE things
     
@@ -119,72 +119,72 @@ export async function POST(req) {
     );
     
     if ((isSingular || isPlural) && conversationHistory.length > 0) {
-      // Extract course numbers from recent conversation
-      const lookbackMessages = isSingular ? 2 : 4; // Singular: last 2, Plural: last 4
+      // extact course nubers from recent converstion
+      const lookbackMessages = isSingular ? 2 : 4; // singular: last 2, plural: last 4
       const recentMessages = conversationHistory.slice(-lookbackMessages);
-      const courseNumbers = [...currentCourses]; // Start with courses from current message
+      const courseNumbers = [...currentCourses]; // start with courses from curent message
       
       recentMessages.forEach(msg => {
-        // Look for CS XXX pattern
+        // lok for CS XXX patern
         const matches = msg.content.match(/CS\s*(\d{3}[A-Z]?)/gi);
         if (matches) {
           courseNumbers.push(...matches);
         }
       });
       
-      // If we found course numbers, add them to the search query
+      // if we found corse numbers add them to query
       if (courseNumbers.length > 0) {
         const uniqueCourses = [...new Set(courseNumbers)];
         
-        // For singular references, only use the LAST course mentioned
+        // for singular refs only use LAST course mentioned
         const coursesToUse = isSingular ? [uniqueCourses[uniqueCourses.length - 1]] : uniqueCourses;
         
         searchQuery = `${coursesToUse.join(' ')} ${message}`;
-        console.log(`🔄 Expanded query with ${isSingular ? 'singular' : 'plural'} context: "${searchQuery}"`);
+        console.log(`Expanded query with ${isSingular ? 'singular' : 'plural'} context: "${searchQuery}"`);
       }
     } else if (currentCourses.length > 0) {
-      // Even without contextual words, if we have course numbers, enhance the query
+      // even withou contextual words if we have corse numbers enhance the qurey
       searchQuery = `${currentCourses.join(' ')} schedule timing location ${message}`;
-      console.log(`🔄 Enhanced query with course numbers: "${searchQuery}"`);
+      console.log(`Enhanced query with course numbers: "${searchQuery}"`);
     }
 
-    // Step 2: Find relevant knowledge chunks using vector search
+    // step 2: find relevant chunks using vector serch
     let relevantChunks = [];
     try {
       relevantChunks = await findRelevantChunks(searchQuery, {
-        topK: 10, // Increased to get more results for multi-item queries
-        minScore: 0.25 // Slightly lower threshold for better recall
+        topK: 10, // incresed to get more results for multi item queries
+        minScore: 0.25 // slighlty lower threshold for beter recall
       });
-      console.log(`✅ Found ${relevantChunks.length} relevant chunks via vector search`);
+      console.log(`Found ${relevantChunks.length} relevant chunks via vector search`);
       
-      // Debug: Log top chunks for CS course queries
+      // debug: log top chunks for CS corse queries
       if (searchQuery.toLowerCase().includes('cs') || searchQuery.match(/\d{3}/)) {
-        console.log('📚 Top 3 chunks found:');
+        console.log('Top 3 chunks found:');
         relevantChunks.slice(0, 3).forEach((chunk, i) => {
           console.log(`  ${i + 1}. ${chunk.title} (score: ${(chunk.similarity * 100).toFixed(1)}%)`);
           console.log(`     Preview: ${chunk.content.substring(0, 100)}...`);
         });
       }
     } catch (vectorError) {
-      console.warn('⚠️ Vector search failed, falling back to keyword search:', vectorError.message);
+      console.warn('Vector search faild, falling back to keyword search:', vectorError.message);
       relevantChunks = keywordSearch(searchQuery, 10);
-      console.log(`✅ Found ${relevantChunks.length} relevant chunks via keyword search`);
+      console.log(`Found ${relevantChunks.length} relevant chunks via keyword search`);
     }
 
-    // Step 2: Build context from relevant chunks (without source labels)
+    // step 2: buld context from chunks (no source labels)
     const context = relevantChunks.length > 0
       ? relevantChunks
           .map(chunk => chunk.content)
           .join('\n\n---\n\n')
       : "No specific information found in the knowledge base.";
 
-    // Step 3: Build conversation context
+    // step 3: buld conversation context
     const conversationContext = conversationHistory
-      .slice(-6) // Last 3 exchanges
+      .slice(-6) // last 3 exchanges
       .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
       .join('\n');
 
-    // Step 4: Create enhanced prompt for RAG
+    // step 4: create prompt for rag
     const systemPrompt = `You are an intelligent assistant for Binghamton University with access to an accurate knowledge base.
 
 KNOWLEDGE BASE INFORMATION:
@@ -228,7 +228,7 @@ USER QUESTION: ${message}
 
 Provide a complete, accurate answer using the knowledge base information above:`;
 
-    // Step 5: Generate response with Gemini (with retry logic)
+    // step 5: genrate response with gemini (with retry)
     let response;
     let usedFallback = false;
     
@@ -246,9 +246,9 @@ Provide a complete, accurate answer using the knowledge base information above:`
       const result = await retryWithBackoff(() => model.generateContent(systemPrompt));
       response = result.response.text();
       
-      // Step 5.5: If no knowledge base info, try Google Search
+      // step 5.5: if no KB info try google search
       if (relevantChunks.length === 0 || response.includes("I don't have that specific information")) {
-        console.log('🌐 No KB info found, trying Google Search...');
+        console.log('No KB info found trying Google Search...');
         
         try {
           const searchModel = genAI.getGenerativeModel({
@@ -262,11 +262,11 @@ Provide a complete, accurate answer using the knowledge base information above:`
             }]
           });
 
-          // Build conversation context for search
+          // build convo context for serch
           let conversationContext = '';
           if (conversationHistory.length > 0) {
             conversationContext = conversationHistory
-              .slice(-4) // Last 2 exchanges (4 messages)
+              .slice(-4) // last 2 exchanges (4 msgs)
               .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
               .join('\n');
           }
@@ -286,23 +286,23 @@ Be helpful and accurate.`;
 
           const searchResult = await retryWithBackoff(() => searchModel.generateContent(searchPrompt));
           response = searchResult.response.text();
-          console.log('✅ Google Search provided answer');
+          console.log('Google Search provided answr');
         } catch (searchError) {
-          console.warn('⚠️ Google Search failed:', searchError.message);
-          // Keep the "I don't have that information" response if search fails
+          console.warn('Google Search failed:', searchError.message);
+          // keep the "i dont have that info" response if serch fails
         }
       }
       
     } catch (geminiError) {
-      console.error('❌ Gemini failed after retries:', geminiError.message);
+      console.error('Gemini failed after retries:', geminiError.message);
       
-      // Fallback 1: Use context directly if we have it
+      // fllback 1: use context directly if we have it
       if (relevantChunks.length > 0) {
-        console.log('🔄 Using direct context fallback');
+        console.log('Using direct context fallbak');
         response = `Based on our knowledge base:\n\n${relevantChunks[0].content}\n\n(Note: AI processing temporarily unavailable, showing raw information)`;
         usedFallback = true;
       } else {
-        // Fallback 2: Return helpful error
+        // fallback 2: return helpfu error
         return NextResponse.json({
           message: "I'm having trouble processing your request right now. The AI service is temporarily overloaded. Please try again in a moment.",
           metadata: {
@@ -314,7 +314,7 @@ Be helpful and accurate.`;
       }
     }
 
-    // Step 6: Prepare response data
+    // step 6: prepare resonse data
     const responseData = {
       response,
       sources: relevantChunks.map(chunk => ({
@@ -331,20 +331,20 @@ Be helpful and accurate.`;
       }
     };
 
-    // Step 7: Cache the response
+    // step 7: cache the resonse
     cache.set(cacheKey, {
       data: responseData,
       timestamp: Date.now()
     });
 
-    console.log(`✅ Response generated in ${responseData.metadata.processingTime}ms${usedFallback ? ' (fallback)' : ''}`);
-    console.log('📊 Results:', {
+    console.log(`Response generated in ${responseData.metadata.processingTime}ms${usedFallback ? ' (fallback)' : ''}`);
+    console.log('Results:', {
       chunksFound: responseData.metadata.chunksFound,
       searchMethod: responseData.metadata.searchMethod,
       cached: responseData.metadata.cached,
       responseLength: response.length
     });
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('=================================================================\n');
     
     return NextResponse.json({
       message: response,
@@ -352,13 +352,13 @@ Be helpful and accurate.`;
     });
 
   } catch (error) {
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error('❌ ERROR LOG - RAG ENDPOINT');
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error('🕐 Timestamp:', new Date().toISOString());
-    console.error('⚠️ Error:', error.message);
-    console.error('📋 Stack:', error.stack);
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.error('=================================================================');
+    console.error('ERROR LOG - RAG ENDPOINT');
+    console.error('=================================================================');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('=================================================================\n');
     
     return NextResponse.json({
       message: "Sorry, I encountered an error processing your request.",

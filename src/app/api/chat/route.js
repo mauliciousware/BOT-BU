@@ -3,14 +3,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getInternalContext } from '@/lib/documentProcessor';
 import { canMakeRequest, recordRequest, shouldThrottle } from '@/lib/rateLimitTracker';
 
-// Initialize Gemini AI
+// initalize the gemini ai client
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
-// Constants for tier detection
+// constans for detecing which tier to use
 const TIER1_INSUFFICIENT_SIGNAL = "TIER1_INSUFFICIENT";
 const TIER2_INSUFFICIENT_SIGNAL = "TIER2_INSUFFICIENT";
 
-// Custom prompts for each tier
+// promts for each tier customized
 const TIER1_PROMPT = `You are a professional AI assistant for Binghamton University with access to official internal documents.
 
 IMPORTANT INSTRUCTIONS:
@@ -51,14 +51,12 @@ IMPORTANT INSTRUCTIONS:
 
 User question: {question}`;
 
-// ============================================================================
-// TIER 1: Internal Knowledge Base Search
-// ============================================================================
+// ********** Tire 1: Internal Knowledge Base **********
 async function tryTier1(userMessage, conversationHistory = []) {
-  console.log('\n🔍 TIER 1: Checking Internal Knowledge Base...');
+  console.log('\nTIER 1: Checking Internal Knowledge Base...');
   
   try {
-    // Search internal documents
+    // search thru internal docs
     const internalData = await getInternalContext(userMessage);
     
     if (!internalData || !internalData.context) {
@@ -67,9 +65,9 @@ async function tryTier1(userMessage, conversationHistory = []) {
     }
 
     const sources = internalData.sources || [];
-    console.log(`   ✅ Found ${internalData.chunkCount} relevant chunks from: ${sources.join(', ')}`);
+    console.log(`   Found ${internalData.chunkCount} relevant chunks from: ${sources.join(', ')}`);
 
-    // Build conversation history for context
+    // build the conversation histroy for context
     let conversationContext = '';
     if (conversationHistory && conversationHistory.length > 0) {
       conversationContext = '\n\nPrevious conversation:\n';
@@ -79,12 +77,12 @@ async function tryTier1(userMessage, conversationHistory = []) {
       });
     }
 
-    // Generate prompt with context AND conversation history
+    // genrate prompt with context and convo history
     const prompt = TIER1_PROMPT
       .replace('{context}', internalData.context)
       .replace('{question}', userMessage) + conversationContext;
 
-    // Call Gemini WITHOUT Google Search tool
+    // call gemini api but dont use google search here
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
@@ -99,20 +97,20 @@ async function tryTier1(userMessage, conversationHistory = []) {
     const response = result.response;
     const text = response.text();
 
-    // Check if AI says it needs more info
+    // chek if the ai needs more infomation
     if (text.trim() === TIER1_INSUFFICIENT_SIGNAL) {
-      console.log('   ⏭️  TIER 1: AI determined internal docs are insufficient');
+      console.log('   TIER 1: AI said internal docs arent enuf');
       return { success: false, reason: 'insufficient_context' };
     }
 
-    console.log('   ✅ TIER 1 SUCCESS: Answered from internal documents');
+    console.log('   TIER 1 SUCCESS: Answered from internal documents');
     
-    // Sanitize source filenames to be more professional
+    // clean up the source file names so they look better
     const sanitizedSources = sources.map(filename => {
-      // Remove file extensions and make more user-friendly
+      // remve file extensions make it look nicer
       const baseName = filename.replace(/\.(txt|pdf|docx)$/i, '');
       
-      // Map internal filenames to professional names
+      // map filenames to better names
       const friendlyNames = {
         'DeleteLater': 'University Staff Directory',
         'cs_exam_schedule': 'Computer Science Exam Schedule',
@@ -141,14 +139,12 @@ async function tryTier1(userMessage, conversationHistory = []) {
   }
 }
 
-// ============================================================================
-// TIER 2: LLM Built-in Knowledge (No Google Search)
-// ============================================================================
+// ********** Tier 2: Built in AI knowledge (no google search) **********
 async function tryTier2(userMessage, conversationHistory = []) {
-  console.log('\n🧠 TIER 2: Trying AI Built-in Knowledge...');
+  console.log('\nTIER 2: Trying AI Built-in Knowledge...');
   
   try {
-    // Build conversation history for context
+    // build convo history
     let conversationContext = '';
     if (conversationHistory && conversationHistory.length > 0) {
       conversationContext = '\n\nPrevious conversation:\n';
@@ -160,7 +156,7 @@ async function tryTier2(userMessage, conversationHistory = []) {
 
     const prompt = TIER2_PROMPT.replace('{question}', userMessage) + conversationContext;
 
-    // Call Gemini WITHOUT Google Search tool
+    // call gemini - no google search tooling
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
@@ -175,13 +171,13 @@ async function tryTier2(userMessage, conversationHistory = []) {
     const response = result.response;
     const text = response.text();
 
-    // Check if AI says it needs real-time/current info
+    // check if ai needs realtime info
     if (text.trim() === TIER2_INSUFFICIENT_SIGNAL) {
-      console.log('   ⏭️  TIER 2: AI needs current/real-time information');
+      console.log('   TIER 2: AI needs current/real-time informtion');
       return { success: false, reason: 'needs_current_info' };
     }
 
-    console.log('   ✅ TIER 2 SUCCESS: Answered using AI knowledge');
+    console.log('   TIER 2 SUCCESS: Answered using AI knowledge');
     
     return {
       success: true,
@@ -200,14 +196,12 @@ async function tryTier2(userMessage, conversationHistory = []) {
   }
 }
 
-// ============================================================================
-// TIER 3: Google Search Grounding
-// ============================================================================
+// ********** Tier3 : Google Search **********
 async function tryTier3(userMessage, conversationHistory = []) {
-  console.log('\n🌐 TIER 3: Activating Google Search Grounding...');
+  console.log('\nTIER 3: Activating Google Search Grounding...');
   
   try {
-    // Build conversation history for context
+    // build conversaton context
     let conversationContext = '';
     if (conversationHistory && conversationHistory.length > 0) {
       conversationContext = '\n\nPrevious conversation:\n';
@@ -219,7 +213,7 @@ async function tryTier3(userMessage, conversationHistory = []) {
 
     const prompt = TIER3_PROMPT.replace('{question}', userMessage) + conversationContext;
 
-    // Call Gemini WITH Google Search tool
+    // call gemini WITH google search enabled
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
@@ -237,7 +231,7 @@ async function tryTier3(userMessage, conversationHistory = []) {
     const response = result.response;
     const text = response.text();
 
-    // Extract grounding metadata if available
+    // extract the grounding metdata if its there
     const candidates = response.candidates || [];
     const groundingMetadata = candidates[0]?.groundingMetadata || null;
     
@@ -272,19 +266,17 @@ async function tryTier3(userMessage, conversationHistory = []) {
   }
 }
 
-// ============================================================================
-// MAIN CHAT ENDPOINT - 3-TIER DECISION LOGIC
-// ============================================================================
+// ********** Main chat endpint - 3 tier system **********
 export async function POST(request) {
   const timestamp = new Date().toISOString();
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('� USER QUERY LOG - MULTI-TIER CHAT ENDPOINT');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🕐 Timestamp:', timestamp);
+  console.log('\n================================================================================');
+  console.log('USER QUERY LOG - MULTI-TIER CHAT ENDPOINT');
+  console.log('================================================================================');
+  console.log('Timestamp:', timestamp);
   console.log('='.repeat(80));
 
   try {
-    // Parse request
+    // pars the request body
     const { message, conversationHistory = [] } = await request.json();
 
     if (!message?.trim()) {
@@ -294,12 +286,10 @@ export async function POST(request) {
       );
     }
 
-    // ========================================================================
-    // PROTECTION 1: Request Throttling (prevent rapid-fire requests)
-    // ========================================================================
+    // --- Protection 1: throttle rapid requests ---
     const throttleCheck = shouldThrottle();
     if (throttleCheck.throttled) {
-      console.log(`⏸️  Request throttled: ${throttleCheck.message}`);
+      console.log(`Request throttled: ${throttleCheck.message}`);
       return NextResponse.json(
         { 
           error: 'Please wait before sending another message',
@@ -311,12 +301,10 @@ export async function POST(request) {
       );
     }
 
-    // ========================================================================
-    // PROTECTION 2: Rate Limit Check (RPM and RPD limits)
-    // ========================================================================
+    // --- Protection 2: check rate limits (rpm and rpd) ---
     const rateLimitCheck = canMakeRequest();
     if (!rateLimitCheck.allowed) {
-      console.log(`🚫 Rate limit exceeded: ${rateLimitCheck.reason}`);
+      console.log(`Rate limit exceeded: ${rateLimitCheck.reason}`);
       return NextResponse.json(
         { 
           error: rateLimitCheck.message,
@@ -329,26 +317,24 @@ export async function POST(request) {
       );
     }
 
-    console.log(`📝 User Message: "${message}"`);
-    console.log(`📊 Message Length: ${message.length} characters`);
+    console.log(`User Message: "${message}"`);
+    console.log(`Message Length: ${message.length} characters`);
     
-    // Log conversation history length
+    // log converstaion history len
     if (conversationHistory && conversationHistory.length > 0) {
-      console.log(`💬 Conversation context: ${conversationHistory.length} previous messages`);
+      console.log(`Conversation context: ${conversationHistory.length} previous messages`);
     }
 
-    // Record this request for rate limiting
+    // record this reqest for rate tracking
     recordRequest(message.length);
 
-    // ========================================================================
-    // TIER 1: Try Internal Knowledge Base First
-    // ========================================================================
+    // --- Try tier 1 first: internal knowledge base ---
     const tier1Result = await tryTier1(message, conversationHistory);
     
     if (tier1Result.success) {
-      console.log('\n✅ FINAL ANSWER: Tier 1 (Internal Documents)');
-      console.log('📊 Response Length:', tier1Result.response.length, 'characters');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('\nFINAL ANSWER: Tier 1 (Internal Documents)');
+      console.log('Response Length:', tier1Result.response.length, 'characters');
+      console.log('================================================================================\n');
       
       return NextResponse.json({
         message: tier1Result.response,
@@ -356,15 +342,13 @@ export async function POST(request) {
       });
     }
 
-    // ========================================================================
-    // TIER 2: Try AI Built-in Knowledge
-    // ========================================================================
+    // --- Try tier 2: ai built in knowledge ---
     const tier2Result = await tryTier2(message, conversationHistory);
     
     if (tier2Result.success) {
-      console.log('\n✅ FINAL ANSWER: Tier 2 (AI Knowledge)');
-      console.log('📊 Response Length:', tier2Result.response.length, 'characters');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('\nFINAL ANSWER: Tier 2 (AI Knowledge)');
+      console.log('Response Length:', tier2Result.response.length, 'characters');
+      console.log('================================================================================\n');
       
       return NextResponse.json({
         message: tier2Result.response,
@@ -372,16 +356,14 @@ export async function POST(request) {
       });
     }
 
-    // ========================================================================
-    // TIER 3: Use Google Search as Last Resort
-    // ========================================================================
+    // --- Try tier 3 last resort: google search ---
     const tier3Result = await tryTier3(message, conversationHistory);
     
     if (tier3Result.success) {
-      console.log('\n✅ FINAL ANSWER: Tier 3 (Google Search)');
-      console.log('📊 Response Length:', tier3Result.response.length, 'characters');
-      console.log('🔗 Sources:', tier3Result.metadata.sources?.length || 0);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('\nFINAL ANSWER: Tier 3 (Google Search)');
+      console.log('Response Length:', tier3Result.response.length, 'characters');
+      console.log('Sources:', tier3Result.metadata.sources?.length || 0);
+      console.log('================================================================================\n');
       
       return NextResponse.json({
         message: tier3Result.response,
@@ -389,11 +371,9 @@ export async function POST(request) {
       });
     }
 
-    // ========================================================================
-    // ALL TIERS FAILED
-    // ========================================================================
-    console.log('\n❌ ALL TIERS FAILED');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    // --- all tiers failed ---
+    console.log('\nALL TIERS FAILED');
+    console.log('================================================================================\n');
     
     return NextResponse.json({
       message: "I apologize, but I'm having trouble finding an answer to your question. Please try rephrasing or contact support.",
@@ -408,19 +388,17 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error('❌ CRITICAL ERROR LOG');
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error('🕐 Timestamp:', new Date().toISOString());
-    console.error('❌ Error Message:', error.message);
-    console.error('📋 Error Stack:', error.stack);
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.error('\n================================================================================');
+    console.error('CRITICAL ERROR LOG');
+    console.error('================================================================================');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    console.error('================================================================================\n');
     
-    // ========================================================================
-    // PROTECTION 3: Enhanced Error Handling
-    // ========================================================================
+    // --- Protection 3: handle errors ---
     
-    // Check for specific Gemini API errors
+    // check for gemini api errors
     if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
       return NextResponse.json(
         { 
@@ -463,9 +441,7 @@ export async function POST(request) {
   }
 }
 
-// ============================================================================
-// HEALTH CHECK ENDPOINT
-// ============================================================================
+// *** health check endpont ***
 export async function GET() {
   return NextResponse.json({
     status: 'ok',

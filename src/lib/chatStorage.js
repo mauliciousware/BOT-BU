@@ -1,12 +1,9 @@
-// Chat Storage Management using localStorage
+// chat storage managment using localstorage
 
 const STORAGE_KEY = 'bu_ai_chats';
 const CURRENT_CHAT_KEY = 'bu_ai_current_chat';
 
-/**
- * Check if localStorage is available
- * @returns {boolean}
- */
+/* check if localstorage is availble */
 function isLocalStorageAvailable() {
   try {
     return typeof window !== 'undefined' && window.localStorage !== undefined;
@@ -15,10 +12,7 @@ function isLocalStorageAvailable() {
   }
 }
 
-/**
- * Get all chats from localStorage
- * @returns {Array} Array of chat objects
- */
+/* get all chats from localstorage */
 export function getAllChats() {
   if (!isLocalStorageAvailable()) return [];
   
@@ -33,10 +27,7 @@ export function getAllChats() {
   }
 }
 
-/**
- * Save all chats to localStorage
- * @param {Array} chats - Array of chat objects
- */
+/* save all chats to localstorage */
 export function saveAllChats(chats) {
   if (!isLocalStorageAvailable()) return;
   
@@ -51,11 +42,7 @@ export function saveAllChats(chats) {
   }
 }
 
-/**
- * Create a new chat
- * @param {string} firstMessage - The first message content (optional)
- * @returns {Object} New chat object
- */
+/* create a new chat */
 export function createNewChat(firstMessage = '') {
   const newChat = {
     id: Date.now().toString(),
@@ -67,28 +54,20 @@ export function createNewChat(firstMessage = '') {
   };
   
   const chats = getAllChats();
-  chats.unshift(newChat); // Add to beginning
+  chats.unshift(newChat); // add to begining
   saveAllChats(chats);
   setCurrentChatId(newChat.id);
   
   return newChat;
 }
 
-/**
- * Get a specific chat by ID
- * @param {string} chatId - Chat ID
- * @returns {Object|null} Chat object or null
- */
+/* get a specfic chat by id */
 export function getChatById(chatId) {
   const chats = getAllChats();
   return chats.find(chat => chat.id === chatId) || null;
 }
 
-/**
- * Update a chat
- * @param {string} chatId - Chat ID
- * @param {Object} updates - Updates to apply
- */
+/* update a chat */
 export function updateChat(chatId, updates) {
   const chats = getAllChats();
   const chatIndex = chats.findIndex(chat => chat.id === chatId);
@@ -103,11 +82,7 @@ export function updateChat(chatId, updates) {
   }
 }
 
-/**
- * Add a message to a chat
- * @param {string} chatId - Chat ID
- * @param {Object} message - Message object
- */
+/* add a messge to a chat */
 export function addMessageToChat(chatId, message) {
   const chats = getAllChats();
   const chatIndex = chats.findIndex(chat => chat.id === chatId);
@@ -116,7 +91,7 @@ export function addMessageToChat(chatId, message) {
     chats[chatIndex].messages.push(message);
     chats[chatIndex].updatedAt = new Date().toISOString();
     
-    // Auto-generate title from first user message
+    // auto genrate title from first user messge
     if (chats[chatIndex].messages.length === 1 && message.type === 'user') {
       chats[chatIndex].title = generateTitle(message.content);
     }
@@ -125,10 +100,7 @@ export function addMessageToChat(chatId, message) {
   }
 }
 
-/**
- * Delete a chat
- * @param {string} chatId - Chat ID
- */
+/* delete a chat */
 export function deleteChat(chatId) {
   if (!isLocalStorageAvailable()) return;
   
@@ -136,7 +108,7 @@ export function deleteChat(chatId) {
   const filteredChats = chats.filter(chat => chat.id !== chatId);
   saveAllChats(filteredChats);
   
-  // If deleting current chat, clear current chat ID
+  // if deletng current chat clear current chat id
   if (getCurrentChatId() === chatId) {
     try {
       localStorage.removeItem(CURRENT_CHAT_KEY);
@@ -146,19 +118,12 @@ export function deleteChat(chatId) {
   }
 }
 
-/**
- * Rename a chat
- * @param {string} chatId - Chat ID
- * @param {string} newTitle - New title
- */
+/* rename a chat */
 export function renameChat(chatId, newTitle) {
   updateChat(chatId, { title: newTitle });
 }
 
-/**
- * Toggle pin status of a chat
- * @param {string} chatId - Chat ID
- */
+/* togle pin status of a chat */
 export function togglePinChat(chatId) {
   const chat = getChatById(chatId);
   if (chat) {
@@ -166,10 +131,7 @@ export function togglePinChat(chatId) {
   }
 }
 
-/**
- * Get current chat ID
- * @returns {string|null} Current chat ID or null
- */
+/* get current chat id */
 export function getCurrentChatId() {
   if (!isLocalStorageAvailable()) return null;
   try {
@@ -180,10 +142,7 @@ export function getCurrentChatId() {
   }
 }
 
-/**
- * Set current chat ID
- * @param {string} chatId - Chat ID
- */
+/* set current chat id */
 export function setCurrentChatId(chatId) {
   if (!isLocalStorageAvailable()) return;
   try {
@@ -193,22 +152,14 @@ export function setCurrentChatId(chatId) {
   }
 }
 
-/**
- * Generate a title from message content
- * @param {string} content - Message content
- * @returns {string} Generated title
- */
+/* genrate a title from message conent */
 function generateTitle(content) {
-  // Take first 50 characters and add ellipsis if needed
+  // tak first 50 characters and add elipsis if needed
   const title = content.slice(0, 50).trim();
   return content.length > 50 ? `${title}...` : title;
 }
 
-/**
- * Get formatted timestamp for display
- * @param {string} isoString - ISO date string
- * @returns {string} Formatted timestamp
- */
+/* get formatted timestmp for display */
 export function getTimestamp(isoString) {
   const date = new Date(isoString);
   const now = new Date();
@@ -225,9 +176,7 @@ export function getTimestamp(isoString) {
   return date.toLocaleDateString();
 }
 
-/**
- * Clear all chats (for testing/reset)
- */
+/* clear all chats (for testing/reset) */
 export function clearAllChats() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(CURRENT_CHAT_KEY);

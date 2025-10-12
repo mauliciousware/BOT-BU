@@ -3,19 +3,15 @@ import path from 'path';
 import { getDocumentProxy } from 'unpdf';
 import mammoth from 'mammoth';
 
-/**
- * Document Processing Library for Knowledge Base
- * Handles TXT, PDF, and DOCX files
- */
+/* docment processing library for knowledge base
+   handels txt pdf and docx files */
 
 const KNOWLEDGE_BASE_PATH = path.join(process.cwd(), 'knowledge-base');
 
-// ============================================================================
-// DOCUMENT CACHE - Prevents re-extracting PDFs/DOCX every request
-// ============================================================================
+// ********** document cache - prevents re extracting pdfs every request **********
 let documentCache = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000; // 5 mins
 
 function isCacheValid() {
   if (!documentCache || !cacheTimestamp) return false;
@@ -25,7 +21,7 @@ function isCacheValid() {
 
 function getCachedDocuments() {
   if (isCacheValid()) {
-    console.log('💾 Using cached documents (saves processing time!)');
+    console.log('Using cached documents (saves procesing time!)');
     return documentCache;
   }
   return null;
@@ -34,12 +30,10 @@ function getCachedDocuments() {
 function setCachedDocuments(documents) {
   documentCache = documents;
   cacheTimestamp = Date.now();
-  console.log('💾 Documents cached for 5 minutes');
+  console.log('Documents cached for 5 minuts');
 }
 
-/**
- * Extract text from a TXT file
- */
+/* extact text from txt file */
 async function extractTextFromTXT(filePath) {
   try {
     const text = await fs.promises.readFile(filePath, 'utf-8');
@@ -50,33 +44,31 @@ async function extractTextFromTXT(filePath) {
   }
 }
 
-/**
- * Extract text from a PDF file
- */
+/* extact text from pdf file */
 async function extractTextFromPDF(filePath) {
   try {
-    console.log(`📕 Extracting text from PDF: ${path.basename(filePath)}`);
+    console.log(`Extracting text from PDF: ${path.basename(filePath)}`);
     
-    // Read PDF file as buffer
+    // red PDF file as buffer
     const buffer = await fs.promises.readFile(filePath);
     
-    // Convert Buffer to Uint8Array (required by unpdf)
+    // convert Buffer to Uint8Aray (required by unpdf)
     const uint8Array = new Uint8Array(buffer);
     
-    // Get PDF document proxy
+    // get PDF document proxy
     const pdf = await getDocumentProxy(uint8Array);
     
     let fullText = '';
     const numPages = pdf.numPages;
     
-    console.log(`   📄 Processing ${numPages} pages...`);
+    console.log(`   Processing ${numPages} pages...`);
     
-    // Extract text from each page
+    // extact text from each page
     for (let i = 1; i <= numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       
-      // Combine all text items from the page
+      // combine all text itms from the page
       const pageText = textContent.items
         .map(item => item.str)
         .join(' ');
@@ -84,45 +76,41 @@ async function extractTextFromPDF(filePath) {
       fullText += pageText + '\n\n';
     }
     
-    console.log(`   ✅ Extracted ${fullText.length} characters from PDF`);
+    console.log(`   Extracted ${fullText.length} characters from PDF`);
     return fullText.trim();
     
   } catch (error) {
-    console.error(`❌ Error reading PDF file ${filePath}:`, error.message);
+    console.error(`Error reading PDF file ${filePath}:`, error.message);
     return `[Error extracting PDF: ${path.basename(filePath)}]`;
   }
 }
 
-/**
- * Extract text from a DOCX file
- */
+/* extract text from docx file */
 async function extractTextFromDOCX(filePath) {
   try {
-    console.log(`📘 Extracting text from DOCX: ${path.basename(filePath)}`);
+    console.log(`Extracting text from DOCX: ${path.basename(filePath)}`);
     
-    // Read DOCX file as buffer
+    // read DOCX file as bufer
     const buffer = await fs.promises.readFile(filePath);
     
-    // Extract text using mammoth
+    // extact text using mammoth
     const result = await mammoth.extractRawText({ buffer });
     const text = result.value;
     
     if (result.messages && result.messages.length > 0) {
-      console.warn('   ⚠️ Mammoth warnings:', result.messages);
+      console.warn('   Mammoth warnings:', result.messages);
     }
     
-    console.log(`   ✅ Extracted ${text.length} characters from DOCX`);
+    console.log(`   Extracted ${text.length} characters from DOCX`);
     return text.trim();
     
   } catch (error) {
-    console.error(`❌ Error reading DOCX file ${filePath}:`, error.message);
+    console.error(`Error reading DOCX file ${filePath}:`, error.message);
     return `[Error extracting DOCX: ${path.basename(filePath)}]`;
   }
 }
 
-/**
- * Extract text from any supported file type
- */
+/* extact text from any suported file type */
 async function extractText(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   
@@ -139,9 +127,7 @@ async function extractText(filePath) {
   }
 }
 
-/**
- * Split text into chunks for better processing
- */
+/* split text into chnks for better procesing */
 function chunkText(text, chunkSize = 1000, overlap = 200) {
   const chunks = [];
   const sentences = text.split(/[.!?]\s+/);
@@ -152,7 +138,7 @@ function chunkText(text, chunkSize = 1000, overlap = 200) {
     if ((currentChunk + sentence).length > chunkSize && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       
-      // Keep last part for overlap
+      // keep last part for ovrlap
       const words = currentChunk.split(' ');
       const overlapWords = words.slice(-Math.floor(overlap / 5));
       currentChunk = overlapWords.join(' ') + ' ' + sentence;
@@ -168,18 +154,16 @@ function chunkText(text, chunkSize = 1000, overlap = 200) {
   return chunks;
 }
 
-/**
- * Get all document files from knowledge base
- */
+/* get all docment files from knowledge base */
 async function getAllDocuments() {
-  // Check cache first
+  // chek cache first
   const cached = getCachedDocuments();
   if (cached) {
     return cached;
   }
 
   try {
-    // Create directory if it doesn't exist
+    // crete directory if it doesnt exist
     if (!fs.existsSync(KNOWLEDGE_BASE_PATH)) {
       await fs.promises.mkdir(KNOWLEDGE_BASE_PATH, { recursive: true });
       console.log('Created knowledge-base directory');
@@ -198,6 +182,12 @@ async function getAllDocuments() {
   }
 }
 
+
+/* proces all documnts and return structured data */
+export async function loadKnowledgeBase() {
+  // chek cache first
+}
+
 /**
  * Process all documents and return structured data
  */
@@ -208,16 +198,16 @@ export async function loadKnowledgeBase() {
     return cached;
   }
 
-  console.log('📚 Loading knowledge base...');
+  console.log('Loading knowledge base...');
   
   const documentPaths = await getAllDocuments();
   
   if (documentPaths.length === 0) {
-    console.log('⚠️  No documents found in knowledge-base/');
+    console.log('No documents found in knowledge-base/');
     return [];
   }
   
-  console.log(`📄 Found ${documentPaths.length} documents`);
+  console.log(`Found ${documentPaths.length} documents`);
   
   const documents = [];
   
@@ -238,25 +228,23 @@ export async function loadKnowledgeBase() {
         chunkCount: chunks.length
       });
       
-      console.log(`   ✅ Extracted ${chunks.length} chunks from ${fileName}`);
+      console.log(`   Extracted ${chunks.length} chunks from ${fileName}`);
     } else {
-      console.log(`   ⚠️  No text extracted from ${fileName}`);
+      console.log(`   No text extracted from ${fileName}`);
     }
   }
   
-  console.log(`✅ Loaded ${documents.length} documents with ${documents.reduce((sum, doc) => sum + doc.chunkCount, 0)} total chunks`);
+  console.log(`Loaded ${documents.length} documents with ${documents.reduce((sum, doc) => sum + doc.chunkCount, 0)} total chunks`);
   
-  // Cache the results
+  // cache the reslts
   setCachedDocuments(documents);
   
   return documents;
 }
 
-/**
- * Simple keyword-based search through documents
- */
+/* simple keyword based serch through docments */
 export function searchDocuments(documents, query, maxResults = 5) {
-  console.log(`🔍 Searching documents for: "${query}"`);
+  console.log(`Searching documents for: "${query}"`);
   
   if (!documents || documents.length === 0) {
     console.log('   No documents to search');
@@ -271,7 +259,7 @@ export function searchDocuments(documents, query, maxResults = 5) {
       const chunk = doc.chunks[i];
       const chunkLower = chunk.toLowerCase();
       
-      // Count matching terms
+      // cont matching terms
       let matchCount = 0;
       for (const term of queryTerms) {
         if (chunkLower.includes(term)) {
@@ -291,7 +279,7 @@ export function searchDocuments(documents, query, maxResults = 5) {
     }
   }
   
-  // Sort by relevance and return top results
+  // sort by relevence and return top results
   results.sort((a, b) => b.relevanceScore - a.relevanceScore);
   
   const topResults = results.slice(0, maxResults);
@@ -301,15 +289,13 @@ export function searchDocuments(documents, query, maxResults = 5) {
   return topResults;
 }
 
-/**
- * Format search results for AI context
- */
+/* format serch results for ai context */
 export function formatContextFromResults(results) {
   if (!results || results.length === 0) {
     return '';
   }
   
-  // Map internal filenames to professional names
+  // map interal filenames to professional names
   const friendlyNames = {
     'DeleteLater.txt': 'University Staff Directory',
     'cs_exam_schedule.txt': 'Computer Science Exam Schedule',
@@ -328,9 +314,7 @@ export function formatContextFromResults(results) {
   return context;
 }
 
-/**
- * Main search function - returns formatted context
- */
+/* main serch function - returns formated context */
 export async function getInternalContext(query) {
   try {
     const documents = await loadKnowledgeBase();
@@ -347,7 +331,7 @@ export async function getInternalContext(query) {
     }
     
     const context = formatContextFromResults(results);
-    console.log(`✅ Generated context from ${results.length} document chunks`);
+    console.log(`Generated context from ${results.length} document chunks`);
     
     return {
       context,

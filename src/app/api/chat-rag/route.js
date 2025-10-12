@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 // Simple in-memory cache
 const cache = new Map();
-const CACHE_TTL = 3600000; // 1 hour
+const CACHE_TTL = 7200000;
 
 function getCacheKey(message) {
   return message.toLowerCase().trim();
@@ -156,6 +156,15 @@ export async function POST(req) {
         minScore: 0.25 // Slightly lower threshold for better recall
       });
       console.log(`✅ Found ${relevantChunks.length} relevant chunks via vector search`);
+      
+      // Debug: Log top chunks for CS course queries
+      if (searchQuery.toLowerCase().includes('cs') || searchQuery.match(/\d{3}/)) {
+        console.log('📚 Top 3 chunks found:');
+        relevantChunks.slice(0, 3).forEach((chunk, i) => {
+          console.log(`  ${i + 1}. ${chunk.title} (score: ${(chunk.similarity * 100).toFixed(1)}%)`);
+          console.log(`     Preview: ${chunk.content.substring(0, 100)}...`);
+        });
+      }
     } catch (vectorError) {
       console.warn('⚠️ Vector search failed, falling back to keyword search:', vectorError.message);
       relevantChunks = keywordSearch(searchQuery, 10);
@@ -176,39 +185,48 @@ export async function POST(req) {
       .join('\n');
 
     // Step 4: Create enhanced prompt for RAG
-    const systemPrompt = `You are an intelligent assistant for Binghamton University. You have access to the university's knowledge base and conversation history.
+    const systemPrompt = `You are an intelligent assistant for Binghamton University with access to an accurate knowledge base.
 
-KNOWLEDGE BASE CONTEXT:
+KNOWLEDGE BASE INFORMATION:
 ${context}
 
 CONVERSATION HISTORY:
 ${conversationContext || 'No previous conversation'}${timeContext}
 
-INSTRUCTIONS:
-1. FIRST, check the conversation history for context about what the user is asking
-2. If the user refers to something mentioned earlier (like "that subject", "the professor", "it", "all 3"), use the conversation history to understand what they mean
-3. Then use the knowledge base context to answer their question
-4. If the user asks about multiple items (e.g., "timing of all 3"), make sure to provide information for ALL items mentioned in the conversation
-5. If the user asks about schedule conflicts or overlaps:
-   - Extract the schedule times from the knowledge base for ALL mentioned courses
-   - Compare the day and time patterns (e.g., MW, TR, MWF with start/end times)
-   - Determine if there are any time conflicts
-   - Provide a clear yes/no answer about whether courses overlap
-6. If this is a dining/food query and current date/time is provided:
-   - Use the current day and time to determine which locations are CURRENTLY OPEN
-   - Compare the current time against the hours listed for today
-   - Clearly state which places are open NOW and which are closed
-   - If asking about "now" or "currently", only mention locations open at this exact moment
-7. If the answer is in the knowledge base, provide a detailed, accurate response with ALL relevant details
-8. If the information is NOT in the knowledge base, say: "I don't have that specific information in my knowledge base."
-9. Always be helpful, friendly, and professional
-10. Do NOT mention sources, documents, or reference numbers in your response
-11. Just provide the answer naturally as if you know the information
-12. Keep answers concise but complete
+CRITICAL INSTRUCTIONS:
+1. **USE THE KNOWLEDGE BASE FIRST**: The information above from the knowledge base is ACCURATE and COMPLETE. Use it to answer questions about:
+   - Course schedules, instructors, locations, times, and CRNs
+   - Dining hall hours and locations
+   - Campus information
+   
+2. **For course queries** (like "Who teaches CS 559?" or "CS 559 location"):
+   - Look in the knowledge base context above for the exact course number
+   - Extract ALL details: instructor name, schedule (days/times), location (building & room), CRN
+   - Provide complete information including: instructor, schedule, location
+   - Example: "CS 559 - Science of Cyber Security is taught by Yan Guanhua. It meets on Monday and Wednesday from 9:45 AM to 11:15 AM in room S2 258."
+
+3. **Check conversation history** for context:
+   - If user says "that course", "it", "the professor", look at previous messages to understand what they mean
+   - For questions about "all 3" or multiple items, refer to earlier conversation
+
+4. **For dining queries with current time**:
+   - Use the current day and time provided to determine what's open NOW
+   - Compare current time against the hours listed
+   - Only mention locations that are currently open
+
+5. **If information is NOT in the knowledge base**:
+   - Say: "I don't have that specific information in my knowledge base."
+   - Do NOT make up information
+
+6. **Response format**:
+   - Be direct and complete
+   - Include ALL relevant details (instructor, time, location for courses)
+   - Don't mention "knowledge base" or "sources" in your answer
+   - Answer naturally as if you know the information
 
 USER QUESTION: ${message}
 
-YOUR ANSWER:`;
+Provide a complete, accurate answer using the knowledge base information above:`;
 
     // Step 5: Generate response with Gemini (with retry logic)
     let response;

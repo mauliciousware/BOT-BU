@@ -11,7 +11,7 @@ const knowledgeBase = JSON.parse(fs.readFileSync(knowledgeBasePath, "utf-8"));
 /* genrate embedding for a querry */
 export async function generateQueryEmbedding(query) {
   try {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const result = await model.embedContent(query);
     return result.embedding.values;
   } catch (error) {

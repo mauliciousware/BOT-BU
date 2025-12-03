@@ -26,7 +26,7 @@ async function generateEmbeddings() {
     const knowledgeBase = JSON.parse(fs.readFileSync(KNOWLEDGE_PATH, 'utf-8'));
     console.log(`📊 Loaded ${knowledgeBase.total_chunks} chunks\n`);
     
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     
     let processed = 0;
     let failed = 0;

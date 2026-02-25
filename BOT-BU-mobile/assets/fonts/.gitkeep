@@ -1,0 +1,9 @@
+/YourExpoApp
+  /assets
+  /components
+  /screens
+  /services
+  /utils
+  App.js
+  app.json
+  package.json
